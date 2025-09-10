@@ -1,0 +1,80 @@
+import javax.persistence.*;
+import java.time.ZonedDateTime;
+import java.util.Set;
+import java.util.UUID;
+
+@Entity
+@Table(name = "appointments")
+public class Appointment {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id; // or Long for auto-increment
+
+    private String title;
+
+    @ManyToOne
+    @JoinColumn(name = "creator_id")
+    private User creator;
+
+    private ZonedDateTime startTimeUtc; // Stored in UTC for consistency
+    private ZonedDateTime endTimeUtc;   // Stored in UTC for consistency
+
+    @ManyToMany
+    @JoinTable(
+            name = "appointment_participants",
+            joinColumns = @JoinColumn(name = "appointment_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> participants;
+
+    // Getters and setters
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public User getCreator() {
+        return creator;
+    }
+
+    public void setCreator(User creator) {
+        this.creator = creator;
+    }
+
+    public ZonedDateTime getStartTimeUtc() {
+        return startTimeUtc;
+    }
+
+    public void setStartTimeUtc(ZonedDateTime startTimeUtc) {
+        this.startTimeUtc = startTimeUtc;
+    }
+
+    public ZonedDateTime getEndTimeUtc() {
+        return endTimeUtc;
+    }
+
+    public void setEndTimeUtc(ZonedDateTime endTimeUtc) {
+        this.endTimeUtc = endTimeUtc;
+    }
+
+    public Set<User> getParticipants() {
+        return participants;
+    }
+
+    public void setParticipants(Set<User> participants) {
+        this.participants = participants;
+    }
+}

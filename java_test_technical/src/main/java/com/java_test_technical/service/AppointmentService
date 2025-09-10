@@ -1,0 +1,52 @@
+import org.springframework.stereotype.Service;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
+public class AppointmentService {
+
+    private final AppointmentRepository appointmentRepository;
+    private final UserRepository userRepository;
+
+    // Constructor
+
+    public Appointment createAppointment(AppointmentCreationRequest request, UUID creatorId) {
+        // Check if all participants can attend during working hours
+        Set<User> participants = request.getParticipantIds().stream()
+                .map(userRepository::findById)
+                .filter(java.util.Optional::isPresent)
+                .map(java.util.Optional::get)
+                .collect(Collectors.toSet());
+
+        // Assuming a standard time zone like "Asia/Jakarta" for the creator's input [cite: 12]
+        ZonedDateTime localStartTime = ZonedDateTime.parse(request.getStartDateTime(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
+        ZonedDateTime localEndTime = ZonedDateTime.parse(request.getEndDateTime(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
+
+        for (User participant : participants) {
+            if (!isWithinWorkingHours(localStartTime, participant.getPreferredTimezone())) {
+                throw new IllegalArgumentException("Appointment time is outside working hours for a participant.");
+            }
+        }
+
+        Appointment appointment = new Appointment();
+        appointment.setTitle(request.getTitle());
+        appointment.setCreator(userRepository.findById(creatorId).orElse(null));
+
+        // Store in UTC
+        appointment.setStartTimeUtc(localStartTime.withZoneSameInstant(ZoneId.of("UTC")));
+        appointment.setEndTimeUtc(localEndTime.withZoneSameInstant(ZoneId.of("UTC")));
+        appointment.setParticipants(participants);
+
+        return appointmentRepository.save(appointment);
+    }
+
+    // Helper method to check working hours
+    private boolean isWithinWorkingHours(ZonedDateTime time, String timezone) {
+        ZonedDateTime localTime = time.withZoneSameInstant(ZoneId.of(timezone));
+        int hour = localTime.getHour();
+        return hour >= 9 && hour < 17; // 09:00 - 17:00 working hours
+    }
+}

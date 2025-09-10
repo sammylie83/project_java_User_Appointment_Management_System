@@ -1,0 +1,24 @@
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import java.util.Date;
+import java.util.UUID;
+
+public class JwtServices {
+
+    private final String secretKey = "your_super_secret_key"; // Store securely!
+    private final long expirationTime = 3600000; // 1 hour in milliseconds
+
+    public String generateToken(UUID userId) {
+        return Jwts.builder()
+                .setSubject(userId.toString())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
+    }
+
+    public UUID getUserIdFromToken(String token) {
+        String userId = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
+        return UUID.fromString(userId);
+    }
+}
