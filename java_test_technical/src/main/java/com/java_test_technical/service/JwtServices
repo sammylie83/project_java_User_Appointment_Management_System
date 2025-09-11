@@ -1,12 +1,23 @@
+package com.java_test_technical.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.util.Date;
 import java.util.UUID;
 
+@Service
 public class JwtServices {
 
-    private final String secretKey = "your_super_secret_key"; // Store securely!
-    private final long expirationTime = 3600000; // 1 hour in milliseconds
+    @Value("${jwt.secret-key}")
+    private String secretKey;
+
+    @Value("${jwt.expiration}")
+    private long expirationTime;
+
+//    private final String secretKey = "your_super_secret_key"; // Store securely!
+//    private final long expirationTime = 3600000; // 1 hour in milliseconds
 
     public String generateToken(UUID userId) {
         return Jwts.builder()

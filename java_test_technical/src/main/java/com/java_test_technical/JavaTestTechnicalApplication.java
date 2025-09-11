@@ -1,4 +1,4 @@
-package project_java_test_coding.java_test_technical;
+package com.java_test_technical;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

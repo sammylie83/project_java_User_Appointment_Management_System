@@ -1,0 +1,94 @@
+package com.java_test_technical.controller;
+
+import com.java_test_technical.model.Appointment;
+import com.java_test_technical.model.User;
+import com.java_test_technical.repository.UserRepository;
+import com.java_test_technical.service.AppointmentService;
+import com.java_test_technical.service.JwtService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/appointments")
+public class AppointmentController {
+    private final AppointmentService appointmentService;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
+
+    public AppointmentController(AppointmentService appointmentService, UserRepository userRepository, JwtService jwtService) {
+        this.appointmentService = appointmentService;
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<Appointment> createAppointment(@RequestHeader("Authorization") String token, @RequestBody AppointmentRequest request) {
+        UUID creatorId = jwtService.getUserIdFromToken(token.substring(7)); // Remove "Bearer "
+
+        try {
+            Appointment newAppointment = appointmentService.createAppointment(
+                    request.getTitle(),
+                    creatorId,
+                    request.getParticipantIds(),
+                    request.getStartTime(),
+                    request.getEndTime()
+            );
+            return ResponseEntity.ok(newAppointment);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    @GetMapping("/my-appointments")
+    public ResponseEntity<List<Appointment>> getMyAppointments(@RequestHeader("Authorization") String token) {
+        UUID userId = jwtService.getUserIdFromToken(token.substring(7));
+        List<Appointment> appointments = appointmentService.getUpcomingAppointments(userId);
+        return ResponseEntity.ok(appointments);
+    }
+}
+
+class AppointmentRequest {
+    private String title;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
+    private Set<UUID> participantIds;
+    // getters/setters
+
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public ZonedDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(ZonedDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public ZonedDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(ZonedDateTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public Set<UUID> getParticipantIds() {
+        return participantIds;
+    }
+
+    public void setParticipantIds(Set<UUID> participantIds) {
+        this.participantIds = participantIds;
+    }
+}
